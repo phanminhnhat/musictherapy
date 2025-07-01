@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HE.ART - Interactive Project Overview</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calming Blue & Neutrals -->
+    <!-- Application Structure Plan: The application is structured as a single-page interactive dashboard with thematic sections (Overview, Architecture, Roadmap, Features, Risks) navigated by a sticky top bar. This non-linear structure was chosen over a simple report layout to provide users with a comprehensive, at-a-glance understanding of the complex HE.ART project. It allows stakeholders to quickly jump to areas of interest (e.g., a developer to the roadmap, a clinician to the patient flow) and explore components interactively (e.g., clicking on system components or timeline sprints). This design prioritizes usability and efficient information synthesis for a diverse audience. -->
+    <!-- Visualization & Content Choices: 
+    - System Architecture: Goal: Organize. Method: Interactive HTML/CSS Diagram. Interaction: Hover/click to show details. Justification: Visually represents complex system relationships without static images, enhancing engagement. Library/Method: HTML/CSS/JS.
+    - Development Roadmap: Goal: Change/Organize. Method: Interactive HTML/CSS Timeline + Chart.js Bar Chart. Interaction: Click sprints for details. Justification: Clearly shows project progression and task allocation over time. Library/Method: HTML/CSS/JS, Chart.js.
+    - Patient/Therapist Flow: Goal: Organize. Method: Step-by-step HTML/CSS Diagram. Interaction: Clickable steps. Justification: Simplifies understanding of complex user workflows. Library/Method: HTML/CSS/JS.
+    - Data Dashboard (Charts): Goals: Inform (Donut), Compare (Bar, Radar), Change (Line). Method: Canvas-based charts. Interaction: Tooltips on hover. Justification: Provides a dynamic, quantitative overview of the study's data points and potential outcomes. Library/Method: Chart.js.
+    - Risks/Considerations: Goal: Inform. Method: Interactive HTML cards. Interaction: Click to expand. Justification: Presents key information concisely while allowing for deeper exploration. Library/Method: HTML/CSS/JS. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            color: #1e293b; /* slate-800 */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+        }
+        .nav-link.active {
+            color: #0284c7; /* sky-600 */
+            border-bottom-color: #0284c7;
+        }
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 60px;
+            height: 4px;
+            background-color: #0284c7; /* sky-600 */
+            margin-top: 1rem;
+            border-radius: 2px;
+        }
+        .flow-step {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .flow-step:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .architecture-component {
+            transition: background-color 0.3s, border-color 0.3s;
+            cursor: pointer;
+        }
+        .architecture-component.highlight {
+            background-color: #ecfdf5; /* green-50 */
+            border-color: #10b981; /* emerald-500 */
+        }
+        .sprint-item {
+            transition: background-color 0.3s;
+        }
+        .sprint-item.active {
+            background-color: #f0f9ff; /* sky-50 */
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-40 shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl font-bold text-sky-700" id="header-main-title">HE.ART</span>
+                    <span class="text-sm text-slate-500 ml-2 mt-1.5 hidden md:block" id="header-sub-title">Healing & Ear of Art</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="language-toggle" class="px-3 py-1 rounded-full bg-sky-100 text-sky-700 text-sm font-medium hover:bg-sky-200">Tiếng Việt</button>
+                    <div class="hidden md:flex items-center space-x-8">
+                        <a href="#overview" class="nav-link text-slate-600 hover:text-sky-600 border-b-2 border-transparent pb-1" data-nav-key="overview">Overview</a>
+                        <a href="#architecture" class="nav-link text-slate-600 hover:text-sky-600 border-b-2 border-transparent pb-1" data-nav-key="architecture">Architecture</a>
+                        <a href="#roadmap" class="nav-link text-slate-600 hover:text-sky-600 border-b-2 border-transparent pb-1" data-nav-key="roadmap">Roadmap</a>
+                        <a href="#features" class="nav-link text-slate-600 hover:text-sky-600 border-b-2 border-transparent pb-1" data-nav-key="features">Features</a>
+                        <a href="#risks" class="nav-link text-slate-600 hover:text-sky-600 border-b-2 border-transparent pb-1" data-nav-key="risks">Important Notes</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section id="overview" class="py-16 sm:py-20">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h1 class="text-4xl md:text-5xl font-bold text-slate-800" data-content-key="overview.mainTitle"></h1>
+                <p class="mt-4 text-lg text-slate-600 max-w-3xl mx-auto" data-content-key="overview.description"></p>
+                
+                <div class="mt-12">
+                    <h3 class="text-2xl font-bold text-slate-700 section-title inline-block" data-content-key="overview.sectionTitle"></h3>
+                    <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <h4 class="text-lg font-semibold text-sky-700" data-content-key="overview.objective1.title"></h4>
+                            <p class="mt-2 text-slate-600" data-content-key="overview.objective1.description"></p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <h4 class="text-lg font-semibold text-sky-700" data-content-key="overview.objective2.title"></h4>
+                            <p class="mt-2 text-slate-600" data-content-key="overview.objective2.description"></p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <h4 class="text-lg font-semibold text-sky-700" data-content-key="overview.objective3.title"></h4>
+                            <p class="mt-2 text-slate-600" data-content-key="overview.objective3.description"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="architecture" class="py-16 sm:py-20 bg-white">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-3xl font-bold text-center section-title inline-block" data-content-key="architecture.mainTitle"></h2>
+                <p class="mt-4 text-lg text-slate-600 max-w-3xl mx-auto text-center" data-content-key="architecture.description"></p>
+                <div class="mt-12">
+                     <div class="w-full max-w-5xl mx-auto p-4 md:p-8">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                            <div class="flex flex-col items-center space-y-4">
+                                <div id="comp-spotify" class="architecture-component w-full p-4 border-2 border-dashed border-slate-300 rounded-lg text-center">
+                                    <h4 class="font-bold text-green-600">Spotify API</h4>
+                                    <p class="text-sm text-slate-500"></p>
+                                </div>
+                                <div id="comp-medical" class="architecture-component w-full p-4 border-2 border-dashed border-slate-300 rounded-lg text-center">
+                                    <h4 class="font-bold text-red-600">Medical Devices</h4>
+                                    <p class="text-sm text-slate-500"></p>
+                                </div>
+                            </div>
+                            <div class="flex flex-col items-center space-y-4 text-2xl text-slate-400 font-mono">
+                                <span class="transform -rotate-90 md:rotate-0">↔</span>
+                                <div id="comp-backend" class="architecture-component w-full p-6 bg-slate-800 text-white rounded-xl shadow-lg text-center">
+                                    <h3 class="font-extrabold text-xl">Backend & API</h3>
+                                    <p class="text-sm opacity-80"></p>
+                                    <div class="mt-2 text-xs font-semibold text-cyan-300">Node.js / Python</div>
+                                </div>
+                                <span class="transform -rotate-90 md:rotate-0">↔</span>
+                            </div>
+                            <div class="flex flex-col items-center space-y-4">
+                                <div id="comp-web" class="architecture-component w-full p-4 border-2 border-slate-400 rounded-lg text-center bg-sky-50">
+                                    <h4 class="font-bold text-sky-800">Web App (mCare Portal)</h4>
+                                    <p class="text-sm text-slate-500"></p>
+                                    <div class="mt-1 text-xs font-semibold text-sky-600">React</div>
+                                </div>
+                                <div id="comp-mobile" class="architecture-component w-full p-4 border-2 border-slate-400 rounded-lg text-center bg-indigo-50">
+                                    <h4 class="font-bold text-indigo-800">Mobile App (iPad)</h4>
+                                    <p class="text-sm text-slate-500"></p>
+                                     <div class="mt-1 text-xs font-semibold text-indigo-600">Swift (iOS)</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-6 flex justify-center">
+                            <div id="comp-db" class="architecture-component w-full md:w-1/3 p-4 bg-slate-200 rounded-xl text-center">
+                                 <h4 class="font-bold text-slate-800">Database</h4>
+                                 <p class="text-sm text-slate-600"></p>
+                                 <div class="mt-1 text-xs font-semibold text-slate-700">PostgreSQL / MongoDB</div>
+                            </div>
+                        </div>
+                     </div>
+                     <div id="architecture-details" class="mt-8 p-6 bg-blue-50/50 rounded-lg border border-blue-200 min-h-[100px] text-slate-700">
+                        <p class="text-center italic" data-content-key="architecture.hoverInstruction"></p>
+                     </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="roadmap" class="py-16 sm:py-20">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-3xl font-bold text-center section-title inline-block" data-content-key="roadmap.mainTitle"></h2>
+                <p class="mt-4 text-lg text-slate-600 max-w-3xl mx-auto text-center" data-content-key="roadmap.description"></p>
+                <div class="mt-12 flex flex-col lg:flex-row gap-8">
+                    <div class="lg:w-1/3">
+                        <ul id="sprint-list" class="space-y-2"></ul>
+                    </div>
+                    <div id="sprint-details" class="lg:w-2/3 bg-white p-6 rounded-lg shadow-md">
+                    </div>
+                </div>
+                <div class="mt-12">
+                    <h3 class="text-2xl font-bold text-slate-700 text-center mb-8" data-content-key="roadmap.chartTitle"></h3>
+                    <div class="bg-white p-4 rounded-lg shadow-md">
+                        <div class="chart-container h-[400px] md:h-[450px]">
+                            <canvas id="roadmapChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="features" class="py-16 sm:py-20 bg-white">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-3xl font-bold text-center section-title inline-block" data-content-key="features.mainTitle"></h2>
+                <p class="mt-4 text-lg text-slate-600 max-w-3xl mx-auto text-center" data-content-key="features.description"></p>
+                
+                <div class="mt-12">
+                     <div class="border-b border-gray-200">
+                        <nav id="feature-tabs" class="-mb-px flex space-x-6" aria-label="Tabs">
+                        </nav>
+                    </div>
+
+                    <div id="feature-content" class="mt-8">
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="risks" class="py-16 sm:py-20">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-3xl font-bold text-center section-title inline-block" data-content-key="risks.mainTitle"></h2>
+                 <p class="mt-4 text-lg text-slate-600 max-w-3xl mx-auto text-center" data-content-key="risks.description"></p>
+                <div class="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow">
+                        <h3 class="text-lg font-semibold text-rose-700" data-content-key="risks.security.title"></h3>
+                        <p class="mt-2 text-slate-600" data-content-key="risks.security.description"></p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow">
+                        <h3 class="text-lg font-semibold text-amber-700" data-content-key="risks.hl7.title"></h3>
+                        <p class="mt-2 text-slate-600" data-content-key="risks.hl7.description"></p>
+                    </div>
+                     <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow">
+                        <h3 class="text-lg font-semibold text-teal-700" data-content-key="risks.uiux.title"></h3>
+                        <p class="mt-2 text-slate-600" data-content-key="risks.uiux.description"></p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow">
+                        <h3 class="text-lg font-semibold text-indigo-700" data-content-key="risks.scalability.title"></h3>
+                        <p class="mt-2 text-slate-600" data-content-key="risks.scalability.description"></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-800 text-slate-300">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center">
+            <p data-content-key="footer"></p>
+        </div>
+    </footer>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            
+            const translations = {
+                en: {
+                    appTitle: "HE.ART - Interactive Project Overview",
+                    header: {
+                        mainTitle: "HE.ART",
+                        subTitle: "Healing & Ear of Art",
+                        nav: {
+                            overview: "Overview",
+                            architecture: "Architecture",
+                            roadmap: "Roadmap",
+                            features: "Features",
+                            risks: "Important Notes"
+                        }
+                    },
+                    overview: {
+                        mainTitle: "Music Therapy in Cardiovascular Care Project",
+                        description: "A groundbreaking digital solution aimed at reducing patient anxiety and collecting vital clinical data through an integrated mobile and web application system.",
+                        sectionTitle: "Key Objectives",
+                        objective1: { title: "Personalized Therapy", description: "Utilize patient music preferences to create customized playlists, enhancing therapeutic effectiveness and comfort." },
+                        objective2: { title: "Monitoring & Data Collection", description: "Integrate with medical devices to continuously and accurately collect physiological (heart rate, blood pressure, SpO2) and psychological (STAI-S) data." },
+                        objective3: { title: "Enhanced Patient Experience", description: "Reduce stress and anxiety before and during cardiac procedures through a user-friendly and intuitive application interface." }
+                    },
+                    architecture: {
+                        mainTitle: "Comprehensive System Architecture",
+                        description: "The HE.ART system is designed with a modular architecture, comprising a mobile application for patients, a web portal for specialists, and a robust integration layer to connect all components and external services.",
+                        hoverInstruction: "Hover or click on a component to see detailed description.",
+                        components: {
+                            'comp-web': { title: 'Web App (mCare Portal)', description: 'This is the central management hub for Administrators and Music Therapists. This platform allows for the management of the entire research process, from patient management and playlist creation to real-time data monitoring and comprehensive report generation.' },
+                            'comp-mobile': { title: 'Mobile App (iPad)', description: 'This is the primary interface for patient interaction. The application runs on an iPad, guiding patients through the study process, administering music preference tests, playing therapeutic music, and collecting physiological data directly from medical devices.' },
+                            'comp-backend': { title: 'Backend & API', description: 'The brain of the system, responsible for handling business logic, user authentication, and providing secure APIs (RESTful/GraphQL) for the web and mobile applications to communicate with the database and external services.' },
+                            'comp-db': { title: 'Database', description: 'Stores all system data, including user information, patient profiles, music preferences, playlists, real-time physiological data, and therapy history. Ensures data integrity, security, and efficient retrieval.' },
+                            'comp-spotify': { title: 'Spotify API Integration', description: 'Communicates with Spotify to search for songs, create, and manage playlists. The system uses OAuth 2.0 for authentication, allowing therapists to access Spotify\'s vast music library for personalized therapy.' },
+                            'comp-medical': { title: 'Medical Devices', description: 'Receives and processes data from medical devices like Philips IntelliVue MX100 via HL7 v2 protocol. A dedicated module will listen, parse HL7 messages, and transform the data for storage and real-time monitoring.' }
+                        }
+                    },
+                    roadmap: {
+                        mainTitle: "MVP Development Roadmap (12 Weeks)",
+                        description: "The project adopts an Agile methodology with 6 sprints, each lasting 2 weeks, focusing on building core features and continuously receiving feedback to refine the product.",
+                        chartTitle: "Estimated Work Allocation per Sprint",
+                        sprintPrefix: "Sprint",
+                        weekPrefix: "Week",
+                        tasks: {
+                            web: "🚀 Web App (mCare Portal)",
+                            mobile: "📱 Mobile App (iPad)",
+                            backend: "⚙️ Backend & Integration"
+                        },
+                        sprints: [
+                            { title: 'Foundation & User Management', weeks: '1-2', tasks: { web: 'Set up web framework, login/registration, basic account management, basic patient profile creation/viewing.', mobile: 'Set up iOS app framework, splash screen.', backend: 'Set up API and DB, authentication and user management APIs, basic patient APIs.' } },
+                            { title: 'Study Flow & Music Preference', weeks: '3-4', tasks: { web: 'Display patient study flow status, basic Spotify API integration (song search, playlist creation on Spotify).', mobile: 'Tutorial video screen, privacy and consent form interface, patient randomization function. Display music preference questionnaire, play 10 music excerpts and scoring, send results to backend.', backend: 'Finalize patient management API, Spotify API, music preference and excerpt APIs.' } },
+                            { title: 'Music Playback & HL7 v2 Integration (Mobile)', weeks: '5-6', tasks: { web: 'Improve playlist management interface.', mobile: 'Play assigned Spotify playlists, HL7 v2 integration to receive and display real-time physiological data.', backend: 'Develop HL7 v2 processing module (server/listener), API to receive and store continuous physiological data.' } },
+                            { title: 'Data Monitoring & Basic Reporting (Web)', weeks: '7-8', tasks: { web: 'Dashboard displaying real-time physiological data from patients, view historical physiological data (basic charts), input blood test results.', mobile: 'Optimize data display.', backend: 'APIs for historical data and lab results.' } },
+                            { title: 'Therapy Management & Data Export', weeks: '9-10', tasks: { web: 'Interface for creating and assigning personalized playlists, therapy program management (create, edit, store). Functionality to export historical therapy and health data to common formats (Excel, CSV).', mobile: 'Display therapy program information.', backend: 'APIs for playlist and therapy program management, data export logic.' } },
+                            { title: 'Finalization & Optimization', weeks: '11-12', tasks: { web: 'Comprehensive testing, performance optimization, UI/UX improvements.', mobile: 'Testing on physical devices, battery and performance optimization.', backend: 'Load testing, DB query optimization, documentation finalization.' } }
+                        ]
+                    },
+                    features: {
+                        mainTitle: "Workflow & Key Features",
+                        description: "Explore the patient and specialist interaction processes, along with personalized data collection and display features, forming the core of HE.ART therapy.",
+                        tabs: {
+                            patientFlow: {
+                                name: "Patient Flow",
+                                content: `
+                                    <p class="mb-6 text-slate-600">This process is designed to be simple and user-friendly, guiding patients through each step of the study clearly, from initiation to therapy completion.</p>
+                                    <div class="relative pl-8 border-l-2 border-sky-200">
+                                        <div class="flow-step mb-8 p-4 bg-white rounded-lg shadow-sm border border-slate-200 relative">
+                                            <div class="absolute -left-[42px] top-1/2 -translate-y-1/2 w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center font-bold">1</div>
+                                            <h4 class="font-semibold text-sky-700">Tutorial Video / Introduction</h4>
+                                            <p class="text-sm text-slate-600 mt-1">Patients watch a video explaining the study's objectives, operational procedures, and including privacy/informed consent agreements. Patients confirm understanding and agreement to proceed.</p>
+                                        </div>
+                                        <div class="flow-step mb-8 p-4 bg-white rounded-lg shadow-sm border border-slate-200 relative">
+                                            <div class="absolute -left-[42px] top-1/2 -translate-y-1/2 w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center font-bold">2</div>
+                                            <h4 class="font-semibold text-sky-700">Medical History Collection (PMH/Anamnesis)</h4>
+                                            <p class="text-sm text-slate-600 mt-1">The application needs to be able to collect patient medical history. Initially, this information is entered on the web portal, but can be added to the application. This includes medical records, health records, and prescriptions.</p>
+                                        </div>
+                                        <div class="flow-step mb-8 p-4 bg-white rounded-lg shadow-sm border border-slate-200 relative">
+                                            <div class="absolute -left-[42px] top-1/2 -translate-y-1/2 w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center font-bold">3</div>
+                                            <h4 class="font-semibold text-sky-700">STAI Questionnaire</h4>
+                                            <p class="text-sm text-slate-600 mt-1">This questionnaire needs to be integrated into the application to be administered to patients before and after the procedure.</p>
+                                        </div>
+                                        <div class="flow-step mb-8 p-4 bg-white rounded-lg shadow-sm border border-slate-200 relative">
+                                            <div class="absolute -left-[42px] top-1/2 -translate-y-1/2 w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center font-bold">4</div>
+                                            <h4 class="font-semibold text-sky-700">Music Therapy / Music Preference Questionnaire</h4>
+                                            <p class="text-sm text-slate-600 mt-1">The application needs to analyze patient music preferences and habits through a visual analog scale test. Patients will listen to excerpts from 10 different songs and score their preference. This result helps create personalized therapy playlists.</p>
+                                        </div>
+                                        <div class="flow-step mb-8 p-4 bg-white rounded-lg shadow-sm border border-slate-200 relative">
+                                            <div class="absolute -left-[42px] top-1/2 -translate-y-1/2 w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center font-bold">5</div>
+                                            <h4 class="font-semibold text-sky-700">Randomization</h4>
+                                            <p class="text-sm text-slate-600 mt-1">This feature will be integrated into the application to randomize patients into study groups.</p>
+                                        </div>
+                                        <div class="flow-step mb-8 p-4 bg-white rounded-lg shadow-sm border border-slate-200 relative">
+                                            <div class="absolute -left-[42px] top-1/2 -translate-y-1/2 w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center font-bold">6</div>
+                                            <h4 class="font-semibold text-sky-700">Music Therapist Prepares Playlist</h4>
+                                            <p class="text-sm text-slate-600 mt-1">Music therapists collect data and prepare a specific playlist tailored to the patient's preferences.</p>
+                                        </div>
+                                        <div class="flow-step mb-8 p-4 bg-white rounded-lg shadow-sm border border-slate-200 relative">
+                                            <div class="absolute -left-[42px] top-1/2 -translate-y-1/2 w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center font-bold">7</div>
+                                            <h4 class="font-semibold text-sky-700">Basal Blood Sampling</h4>
+                                            <p class="text-sm text-slate-600 mt-1">Blood samples (Cortisol, BNP, and ultrasensitive TnI) and salivary alpha amylase are collected.</p>
+                                        </div>
+                                        <div class="flow-step mb-8 p-4 bg-white rounded-lg shadow-sm border border-slate-200 relative">
+                                            <div class="absolute -left-[42px] top-1/2 -translate-y-1/2 w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center font-bold">8</div>
+                                            <h4 class="font-semibold text-sky-700">Music Listening</h4>
+                                            <p class="text-sm text-slate-600 mt-1">Patients listen to the predefined and customized playlist for 30 minutes or for the duration of the intervention.</p>
+                                        </div>
+                                        <div class="flow-step mb-8 p-4 bg-white rounded-lg shadow-sm border border-slate-200 relative">
+                                            <div class="absolute -left-[42px] top-1/2 -translate-y-1/2 w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center font-bold">9</div>
+                                            <h4 class="font-semibold text-sky-700">Continuous Monitoring</h4>
+                                            <p class="text-sm text-slate-600 mt-1">Heart rate, blood pressure, SpO2, and arrhythmia analysis are continuously monitored throughout the process. Data is sent to the application.</p>
+                                        </div>
+                                        <div class="flow-step mb-8 p-4 bg-white rounded-lg shadow-sm border border-slate-200 relative">
+                                            <div class="absolute -left-[42px] top-1/2 -translate-y-1/2 w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center font-bold">10</div>
+                                            <h4 class="font-semibold text-sky-700">Post-Procedure Evaluation (STAI Questionnaire)</h4>
+                                            <p class="text-sm text-slate-600 mt-1">After completion, the application will administer post-procedure questions.</p>
+                                        </div>
+                                        <div class="flow-step p-4 bg-white rounded-lg shadow-sm border border-slate-200 relative">
+                                            <div class="absolute -left-[42px] top-1/2 -translate-y-1/2 w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center font-bold">11</div>
+                                            <h4 class="font-semibold text-sky-700">Final Blood Sampling</h4>
+                                            <p class="text-sm text-slate-600 mt-1">Blood samples (Cortisol, BNP, and ultrasensitive TnI) and salivary alpha amylase are collected after the procedure.</p>
+                                        </div>
+                                    </div>
+                                `
+                            },
+                            dataDashboard: {
+                                name: "Data Dashboard",
+                                content: `
+                                    <p class="mb-8 text-slate-600">The mCare Portal provides a powerful dashboard for specialists and administrators to monitor therapy effectiveness and patient health metrics in real-time and historically.</p>
+                                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                        <div class="bg-white p-4 rounded-lg shadow-md">
+                                            <h4 class="text-center font-semibold text-slate-700 mb-4">Patient Distribution by Group</h4>
+                                            <div class="chart-container"><canvas id="patientGroupChart"></canvas></div>
+                                        </div>
+                                        <div class="bg-white p-4 rounded-lg shadow-md">
+                                            <h4 class="text-center font-semibold text-slate-700 mb-4">Music Preference Test Results (Sample)</h4>
+                                            <div class="chart-container"><canvas id="musicPreferenceChart"></canvas></div>
+                                        </div>
+                                        <div class="bg-white p-4 rounded-lg shadow-md">
+                                            <h4 class="text-center font-semibold text-slate-700 mb-4">Physiological Data Monitoring (Sample)</h4>
+                                            <div class="chart-container"><canvas id="vitalsChart"></canvas></div>
+                                        </div>
+                                        <div class="bg-white p-4 rounded-lg shadow-md">
+                                            <h4 class="text-center font-semibold text-slate-700 mb-4">STAI-S Psychological Assessment (Pre & Post)</h4>
+                                            <div class="chart-container"><canvas id="psychChart"></canvas></div>
+                                        </div>
+                                    </div>
+                                `
+                            }
+                        },
+                        chartLabels: {
+                            patientGroup: ['Group 1 (Control)', 'Group 2 (Pre-procedure)', 'Group 3 (During procedure)'],
+                            musicPreference: ['Pop', 'Rock', 'Classical', 'Jazz', 'Folk'],
+                            musicPreferenceLabel: 'Average Score (1-5)',
+                            vitals: ['-15 min', '-10', '-5', 'Start', '+5', '+10', '+15'],
+                            vitalsLabel1: 'Heart Rate (bpm)',
+                            vitalsLabel2: 'Blood Pressure (systolic)',
+                            psych: ['Anxiety', 'Stress', 'Restlessness', 'Insecurity', 'Fear'],
+                            psychLabel1: 'Pre-therapy',
+                            psychLabel2: 'Post-therapy'
+                        }
+                    },
+                    risks: {
+                        mainTitle: "Important Notes",
+                        description: "To ensure project success, special attention must be paid to issues of medical data security, system scalability, and the complexity of integrating medical standards.",
+                        security: { title: "Security & Compliance", description: "Strict adherence to sensitive medical data protection regulations (e.g., GDPR, HIPAA, and Vietnamese law) is required, along with data encryption and strict access control." },
+                        hl7: { title: "HL7 v2 Integration", description: "This is a complex part, requiring in-depth knowledge due to variations in implementation across vendors. Specialists or experienced teams are needed." },
+                        uiux: { title: "User Experience (UI/UX)", description: "The interface must be extremely user-friendly, simple, and clear, especially for the patient application, to minimize anxiety and facilitate ease of use in a clinical environment." },
+                        scalability: { title: "Scalability", description: "The system architecture needs to be designed for future scalability, accommodating an increasing number of patients and data volume." }
+                    },
+                    footer: "© 2025 HE.ART Project - Healing & Ear of Art. Overview page created for illustration."
+                },
+                vi: {
+                    appTitle: "HE.ART - Tổng quan dự án tương tác",
+                    header: {
+                        mainTitle: "HE.ART",
+                        subTitle: "Healing & Ear of Art",
+                        nav: {
+                            overview: "Tổng quan",
+                            architecture: "Kiến trúc",
+                            roadmap: "Lộ trình",
+                            features: "Tính năng",
+                            risks: "Lưu ý"
+                        }
+                    },
+                    overview: {
+                        mainTitle: "Dự án Liệu pháp Âm nhạc trong Chăm sóc Tim mạch",
+                        description: "Một giải pháp kỹ thuật số đột phá nhằm giảm lo âu cho bệnh nhân và thu thập dữ liệu lâm sàng quan trọng thông qua một hệ thống tích hợp gồm ứng dụng di động và web.",
+                        sectionTitle: "Mục tiêu chính",
+                        objective1: { title: "Cá nhân hóa Liệu pháp", description: "Sử dụng sở thích âm nhạc của bệnh nhân để tạo ra các danh sách phát tùy chỉnh, giúp tăng hiệu quả trị liệu và sự thoải mái." },
+                        objective2: { title: "Giám sát & Thu thập Dữ liệu", description: "Tích hợp với thiết bị y tế để thu thập dữ liệu sinh lý (nhịp tim, huyết áp, SpO2) và tâm lý (STAI-S) một cách liên tục và chính xác." },
+                        objective3: { title: "Nâng cao Trải nghiệm Bệnh nhân", description: "Giảm bớt căng thẳng và lo lắng trước và trong các thủ thuật tim mạch thông qua một giao diện ứng dụng thân thiện và dễ sử dụng." }
+                    },
+                    architecture: {
+                        mainTitle: "Kiến trúc Hệ thống Toàn diện",
+                        description: "Hệ thống HE.ART được thiết kế theo kiến trúc module hóa, bao gồm ứng dụng di động cho bệnh nhân, cổng thông tin web cho chuyên gia, và một lớp tích hợp mạnh mẽ để kết nối tất cả các thành phần và dịch vụ bên ngoài.",
+                        hoverInstruction: "Di chuột hoặc nhấn vào một thành phần để xem mô tả chi tiết.",
+                        components: {
+                            'comp-web': { title: 'Ứng dụng Web (Cổng mCare)', description: 'Đây là trung tâm quản lý cho Quản trị viên và Chuyên gia Âm nhạc trị liệu. Nền tảng này cho phép quản lý toàn bộ quy trình nghiên cứu, từ quản lý bệnh nhân, tạo danh sách phát, đến giám sát dữ liệu thời gian thực và xuất báo cáo tổng hợp.' },
+                            'comp-mobile': { title: 'Ứng dụng Di động (iPad)', description: 'Đây là giao diện chính để bệnh nhân tương tác. Ứng dụng chạy trên iPad, hướng dẫn bệnh nhân qua quy trình nghiên cứu, thực hiện bài kiểm tra sở thích âm nhạc, phát nhạc trị liệu và thu thập dữ liệu sinh lý trực tiếp từ các thiết bị y tế.' },
+                            'comp-backend': { title: 'Backend & API', description: 'Là bộ não của hệ thống, chịu trách nhiệm xử lý logic nghiệp vụ, xác thực người dùng, và cung cấp các API (RESTful/GraphQL) để ứng dụng web và di động giao tiếp với cơ sở dữ liệu và các dịch vụ bên ngoài một cách an toàn.' },
+                            'comp-db': { title: 'Cơ sở dữ liệu', description: 'Lưu trữ toàn bộ dữ liệu của hệ thống, bao gồm thông tin người dùng, hồ sơ bệnh nhân, sở thích âm nhạc, danh sách phát, dữ liệu sinh lý thời gian thực và lịch sử trị liệu. Đảm bảo tính toàn vẹn, bảo mật và khả năng truy xuất hiệu quả.' },
+                            'comp-spotify': { title: 'Tích hợp Spotify API', description: 'Giao tiếp với Spotify để tìm kiếm bài hát, tạo và quản lý danh sách phát. Hệ thống sử dụng OAuth 2.0 để xác thực, cho phép các chuyên gia truy cập thư viện âm nhạc khổng lồ của Spotify để cá nhân hóa liệu pháp.' },
+                            'comp-medical': { title: 'Thiết bị Y tế', description: 'Nhận và xử lý dữ liệu từ các thiết bị y tế như Philips IntelliVue MX100 qua giao thức HL7 v2. Một module chuyên dụng sẽ lắng nghe, phân tích các thông điệp HL7, và chuyển đổi dữ liệu để lưu trữ và giám sát thời gian thực.' }
+                        }
+                    },
+                    roadmap: {
+                        mainTitle: "Lộ trình Phát triển MVP (12 Tuần)",
+                        description: "Dự án áp dụng phương pháp Agile với 6 sprint, mỗi sprint kéo dài 2 tuần, tập trung vào việc xây dựng các tính năng cốt lõi và liên tục nhận phản hồi để hoàn thiện sản phẩm.",
+                        chartTitle: "Phân bổ Công việc theo Sprint (ước tính)",
+                        sprintPrefix: "Sprint",
+                        weekPrefix: "Tuần",
+                        tasks: {
+                            web: "🚀 Ứng dụng Web (Cổng mCare)",
+                            mobile: "📱 Ứng dụng Di động (iPad)",
+                            backend: "⚙️ Backend & Tích hợp"
+                        },
+                        sprints: [
+                            { title: 'Nền tảng & Quản lý Người dùng', weeks: '1-2', tasks: { web: 'Thiết lập khung web, đăng nhập/đăng ký, quản lý tài khoản, tạo/xem hồ sơ bệnh nhân cơ bản.', mobile: 'Thiết lập khung ứng dụng iOS, màn hình khởi động.', backend: 'Thiết lập API và DB, API xác thực và quản lý người dùng, API bệnh nhân cơ bản.' } },
+                            { title: 'Luồng Nghiên cứu & Sở thích Âm nhạc', weeks: '3-4', tasks: { web: 'Hiển thị trạng thái luồng nghiên cứu, tích hợp Spotify API cơ bản (tìm kiếm, tạo playlist).', mobile: 'Video hướng dẫn, biểu mẫu đồng ý, ngẫu nhiên hóa, bảng câu hỏi sở thích, phát 10 đoạn nhạc và chấm điểm.', backend: 'Hoàn thiện API quản lý bệnh nhân, API Spotify, API sở thích âm nhạc.' } },
+                            { title: 'Phát nhạc & Tích hợp HL7 v2', weeks: '5-6', tasks: { web: 'Cải thiện giao diện quản lý playlist.', mobile: 'Phát danh sách phát Spotify được chỉ định, tích hợp HL7 v2 để nhận và hiển thị dữ liệu sinh lý.', backend: 'Phát triển module xử lý HL7 v2, API nhận và lưu trữ dữ liệu sinh lý liên tục.' } },
+                            { title: 'Giám sát Dữ liệu & Báo cáo cơ bản', weeks: '7-8', tasks: { web: 'Dashboard hiển thị dữ liệu sinh lý thời gian thực, xem dữ liệu lịch sử (biểu đồ), nhập kết quả xét nghiệm.', mobile: 'Tối ưu hóa hiển thị dữ liệu.', backend: 'API cho dữ liệu lịch sử và kết quả xét nghiệm.' } },
+                            { title: 'Quản lý Liệu pháp & Xuất dữ liệu', weeks: '9-10', tasks: { web: 'Giao diện tạo và gán playlist cá nhân hóa, quản lý chương trình trị liệu, chức năng xuất dữ liệu (CSV, Excel).', mobile: 'Hiển thị thông tin chương trình trị liệu.', backend: 'API quản lý playlist và chương trình trị liệu, logic xuất dữ liệu.' } },
+                            { title: 'Hoàn thiện & Tối ưu hóa', weeks: '11-12', tasks: { web: 'Kiểm thử toàn diện, tối ưu hóa hiệu suất, cải thiện UI/UX.', mobile: 'Kiểm thử trên thiết bị thật, tối ưu hóa pin và hiệu suất.', backend: 'Kiểm thử tải, tối ưu hóa truy vấn DB, hoàn thiện tài liệu.' } }
+                        ]
+                    },
+                    features: {
+                        mainTitle: "Luồng Nghiệp vụ & Tính năng chính",
+                        description: "Khám phá quy trình tương tác của bệnh nhân và chuyên gia, cùng với các tính năng thu thập và hiển thị dữ liệu được cá nhân hóa, tạo nên cốt lõi của liệu pháp HE.ART.",
+                        tabs: {
+                            patientFlow: {
+                                name: "Luồng Bệnh nhân",
+                                content: `
+                                    <p class="mb-6 text-slate-600">Quy trình này được thiết kế để đơn giản và thân thiện, hướng dẫn bệnh nhân qua từng bước của nghiên cứu một cách rõ ràng, từ lúc bắt đầu cho đến khi hoàn thành liệu pháp.</p>
+                                    <div class="relative pl-8 border-l-2 border-sky-200">
+                                        <div class="flow-step mb-8 p-4 bg-white rounded-lg shadow-sm border border-slate-200 relative">
+                                            <div class="absolute -left-[42px] top-1/2 -translate-y-1/2 w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center font-bold">1</div>
+                                            <h4 class="font-semibold text-sky-700">Xem Video Hướng dẫn</h4>
+                                            <p class="text-sm text-slate-600 mt-1">Bệnh nhân xem video giới thiệu về mục tiêu nghiên cứu, điền vào các mẫu đồng ý và quyền riêng tư, và xác nhận sự hiểu biết để tiếp tục.</p>
+                                        </div>
+                                        <div class="flow-step mb-8 p-4 bg-white rounded-lg shadow-sm border border-slate-200 relative">
+                                            <div class="absolute -left-[42px] top-1/2 -translate-y-1/2 w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center font-bold">2</div>
+                                            <h4 class="font-semibold text-sky-700">Thu thập Tiền sử Y tế (Anamnesis)</h4>
+                                            <p class="text-sm text-slate-600 mt-1">Đây là bước thứ hai trong luồng ứng dụng. Thông tin này ban đầu được nhập trên cổng thông tin web, nhưng có thể được thêm vào ứng dụng. Bao gồm hồ sơ y tế, hồ sơ sức khỏe và đơn thuốc.</p>
+                                        </div>
+                                        <div class="flow-step mb-8 p-4 bg-white rounded-lg shadow-sm border border-slate-200 relative">
+                                            <div class="absolute -left-[42px] top-1/2 -translate-y-1/2 w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center font-bold">3</div>
+                                            <h4 class="font-semibold text-sky-700">Điền Bảng câu hỏi STAI</h4>
+                                            <p class="text-sm text-slate-600 mt-1">Ứng dụng sẽ đưa ra bảng câu hỏi này trước khi thực hiện quy trình.</p>
+                                        </div>
+                                        <div class="flow-step mb-8 p-4 bg-white rounded-lg shadow-sm border border-slate-200 relative">
+                                            <div class="absolute -left-[42px] top-1/2 -translate-y-1/2 w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center font-bold">4</div>
+                                            <h4 class="font-semibold text-sky-700">Điền Bảng câu hỏi về Sở thích Âm nhạc</h4>
+                                            <p class="text-sm text-slate-600 mt-1">Bệnh nhân trả lời các câu hỏi để chọn thể loại âm nhạc ưa thích. Sau đó, bệnh nhân nghe 10 đoạn trích bài hát ngắn và cho điểm sở thích của mình. Kết quả này giúp tạo ra danh sách nhạc trị liệu cá nhân hóa.</p>
+                                        </div>
+                                        <div class="flow-step mb-8 p-4 bg-white rounded-lg shadow-sm border border-slate-200 relative">
+                                            <div class="absolute -left-[42px] top-1/2 -translate-y-1/2 w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center font-bold">5</div>
+                                            <h4 class="font-semibold text-sky-700">Ngẫu nhiên hóa</h4>
+                                            <p class="text-sm text-slate-600 mt-1">Bệnh nhân được ngẫu nhiên hóa vào một nhóm nghiên cứu.</p>
+                                        </div>
+                                        <div class="flow-step mb-8 p-4 bg-white rounded-lg shadow-sm border border-slate-200 relative">
+                                            <div class="absolute -left-[42px] top-1/2 -translate-y-1/2 w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center font-bold">6</div>
+                                            <h4 class="font-semibold text-sky-700">Nhà trị liệu Âm nhạc Chuẩn bị Danh sách nhạc</h4>
+                                            <p class="text-sm text-slate-600 mt-1">Nhà trị liệu âm nhạc thu thập dữ liệu và chuẩn bị một danh sách nhạc cụ thể, phù hợp với sở thích của bệnh nhân.</p>
+                                        </div>
+                                        <div class="flow-step mb-8 p-4 bg-white rounded-lg shadow-sm border border-slate-200 relative">
+                                            <div class="absolute -left-[42px] top-1/2 -translate-y-1/2 w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center font-bold">7</div>
+                                            <h4 class="font-semibold text-sky-700">Lấy Mẫu máu Cơ bản</h4>
+                                            <p class="text-sm text-slate-600 mt-1">Các mẫu máu (Cortisol, BNP và TnI siêu nhạy) và amylase alpha trong nước bọt được lấy.</p>
+                                        </div>
+                                        <div class="flow-step mb-8 p-4 bg-white rounded-lg shadow-sm border border-slate-200 relative">
+                                            <div class="absolute -left-[42px] top-1/2 -translate-y-1/2 w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center font-bold">8</div>
+                                            <h4 class="font-semibold text-sky-700">Nghe nhạc</h4>
+                                            <p class="text-sm text-slate-600 mt-1">Bệnh nhân nghe danh sách nhạc đã được xác định trước và tùy chỉnh trong 30 phút hoặc trong suốt thời gian can thiệp.</p>
+                                        </div>
+                                        <div class="flow-step mb-8 p-4 bg-white rounded-lg shadow-sm border border-slate-200 relative">
+                                            <div class="absolute -left-[42px] top-1/2 -translate-y-1/2 w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center font-bold">9</div>
+                                            <h4 class="font-semibold text-sky-700">Theo dõi liên tục</h4>
+                                            <p class="text-sm text-slate-600 mt-1">Nhịp tim, huyết áp, SpO2, và phân tích loạn nhịp tim được theo dõi liên tục trong suốt quá trình. Dữ liệu được gửi đến ứng dụng.</p>
+                                        </div>
+                                        <div class="flow-step mb-8 p-4 bg-white rounded-lg shadow-sm border border-slate-200 relative">
+                                            <div class="absolute -left-[42px] top-1/2 -translate-y-1/2 w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center font-bold">10</div>
+                                            <h4 class="font-semibold text-sky-700">Đánh giá sau quy trình (Bảng câu hỏi STAI)</h4>
+                                            <p class="text-sm text-slate-600 mt-1">Sau khi hoàn thành, ứng dụng sẽ đưa ra các câu hỏi sau quy trình.</p>
+                                        </div>
+                                        <div class="flow-step p-4 bg-white rounded-lg shadow-sm border border-slate-200 relative">
+                                            <div class="absolute -left-[42px] top-1/2 -translate-y-1/2 w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center font-bold">11</div>
+                                            <h4 class="font-semibold text-sky-700">Lấy Mẫu máu Cuối cùng</h4>
+                                            <p class="text-sm text-slate-600 mt-1">Các mẫu máu (Cortisol, BNP và TnI siêu nhạy) và amylase alpha trong nước bọt được lấy sau quy trình.</p>
+                                        </div>
+                                    </div>
+                                `
+                            },
+                            dataDashboard: {
+                                name: "Data Dashboard",
+                                content: `
+                                    <p class="mb-8 text-slate-600">The mCare Portal provides a powerful dashboard for specialists and administrators to monitor therapy effectiveness and patient health metrics in real-time and historically.</p>
+                                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                        <div class="bg-white p-4 rounded-lg shadow-md">
+                                            <h4 class="text-center font-semibold text-slate-700 mb-4">Patient Distribution by Group</h4>
+                                            <div class="chart-container"><canvas id="patientGroupChart"></canvas></div>
+                                        </div>
+                                        <div class="bg-white p-4 rounded-lg shadow-md">
+                                            <h4 class="text-center font-semibold text-slate-700 mb-4">Music Preference Test Results (Sample)</h4>
+                                            <div class="chart-container"><canvas id="musicPreferenceChart"></canvas></div>
+                                        </div>
+                                        <div class="bg-white p-4 rounded-lg shadow-md">
+                                            <h4 class="text-center font-semibold text-slate-700 mb-4">Physiological Data Monitoring (Sample)</h4>
+                                            <div class="chart-container"><canvas id="vitalsChart"></canvas></div>
+                                        </div>
+                                        <div class="bg-white p-4 rounded-lg shadow-md">
+                                            <h4 class="text-center font-semibold text-slate-700 mb-4">STAI-S Psychological Assessment (Pre & Post)</h4>
+                                            <div class="chart-container"><canvas id="psychChart"></canvas></div>
+                                        </div>
+                                    </div>
+                                `
+                            }
+                        },
+                        chartLabels: {
+                            patientGroup: ['Group 1 (Control)', 'Group 2 (Pre-procedure)', 'Group 3 (During procedure)'],
+                            musicPreference: ['Pop', 'Rock', 'Classical', 'Jazz', 'Folk'],
+                            musicPreferenceLabel: 'Average Score (1-5)',
+                            vitals: ['-15 min', '-10', '-5', 'Start', '+5', '+10', '+15'],
+                            vitalsLabel1: 'Heart Rate (bpm)',
+                            vitalsLabel2: 'Blood Pressure (systolic)',
+                            psych: ['Anxiety', 'Stress', 'Restlessness', 'Insecurity', 'Fear'],
+                            psychLabel1: 'Pre-therapy',
+                            psychLabel2: 'Post-therapy'
+                        }
+                    },
+                    risks: {
+                        mainTitle: "Important Notes",
+                        description: "To ensure project success, special attention must be paid to issues of medical data security, system scalability, and the complexity of integrating medical standards.",
+                        security: { title: "Security & Compliance", description: "Strict adherence to sensitive medical data protection regulations (e.g., GDPR, HIPAA, and Vietnamese law) is required, along with data encryption and strict access control." },
+                        hl7: { title: "HL7 v2 Integration", description: "This is a complex part, requiring in-depth knowledge due to variations in implementation across vendors. Specialists or experienced teams are needed." },
+                        uiux: { title: "User Experience (UI/UX)", description: "The interface must be extremely user-friendly, simple, and clear, especially for the patient application, to minimize anxiety and facilitate ease of use in a clinical environment." },
+                        scalability: { title: "Scalability", description: "The system architecture needs to be designed for future scalability, accommodating an increasing number of patients and data volume." }
+                    },
+                    footer: "© 2025 HE.ART Project - Healing & Ear of Art. Overview page created for illustration."
+                },
+                vi: {
+                    appTitle: "HE.ART - Tổng quan dự án tương tác",
+                    header: {
+                        mainTitle: "HE.ART",
+                        subTitle: "Healing & Ear of Art",
+                        nav: {
+                            overview: "Tổng quan",
+                            architecture: "Kiến trúc",
+                            roadmap: "Lộ trình",
+                            features: "Tính năng",
+                            risks: "Lưu ý"
+                        }
+                    },
+                    overview: {
+                        mainTitle: "Dự án Liệu pháp Âm nhạc trong Chăm sóc Tim mạch",
+                        description: "Một giải pháp kỹ thuật số đột phá nhằm giảm lo âu cho bệnh nhân và thu thập dữ liệu lâm sàng quan trọng thông qua một hệ thống tích hợp gồm ứng dụng di động và web.",
+                        sectionTitle: "Mục tiêu chính",
+                        objective1: { title: "Cá nhân hóa Liệu pháp", description: "Sử dụng sở thích âm nhạc của bệnh nhân để tạo ra các danh sách phát tùy chỉnh, giúp tăng hiệu quả trị liệu và sự thoải mái." },
+                        objective2: { title: "Giám sát & Thu thập Dữ liệu", description: "Tích hợp với thiết bị y tế để thu thập dữ liệu sinh lý (nhịp tim, huyết áp, SpO2) và tâm lý (STAI-S) một cách liên tục và chính xác." },
+                        objective3: { title: "Nâng cao Trải nghiệm Bệnh nhân", description: "Giảm bớt căng thẳng và lo lắng trước và trong các thủ thuật tim mạch thông qua một giao diện ứng dụng thân thiện và dễ sử dụng." }
+                    },
+                    architecture: {
+                        mainTitle: "Kiến trúc Hệ thống Toàn diện",
+                        description: "Hệ thống HE.ART được thiết kế theo kiến trúc module hóa, bao gồm ứng dụng di động cho bệnh nhân, cổng thông tin web cho chuyên gia, và một lớp tích hợp mạnh mẽ để kết nối tất cả các thành phần và dịch vụ bên ngoài.",
+                        hoverInstruction: "Di chuột hoặc nhấn vào một thành phần để xem mô tả chi tiết.",
+                        components: {
+                            'comp-web': { title: 'Ứng dụng Web (Cổng mCare)', description: 'Đây là trung tâm quản lý cho Quản trị viên và Chuyên gia Âm nhạc trị liệu. Nền tảng này cho phép quản lý toàn bộ quy trình nghiên cứu, từ quản lý bệnh nhân, tạo danh sách phát, đến giám sát dữ liệu thời gian thực và xuất báo cáo tổng hợp.' },
+                            'comp-mobile': { title: 'Ứng dụng Di động (iPad)', description: 'Đây là giao diện chính để bệnh nhân tương tác. Ứng dụng chạy trên iPad, hướng dẫn bệnh nhân qua quy trình nghiên cứu, thực hiện bài kiểm tra sở thích âm nhạc, phát nhạc trị liệu và thu thập dữ liệu sinh lý trực tiếp từ các thiết bị y tế.' },
+                            'comp-backend': { title: 'Backend & API', description: 'Là bộ não của hệ thống, chịu trách nhiệm xử lý logic nghiệp vụ, xác thực người dùng, và cung cấp các API (RESTful/GraphQL) để ứng dụng web và di động giao tiếp với cơ sở dữ liệu và các dịch vụ bên ngoài một cách an toàn.' },
+                            'comp-db': { title: 'Cơ sở dữ liệu', description: 'Lưu trữ toàn bộ dữ liệu của hệ thống, bao gồm thông tin người dùng, hồ sơ bệnh nhân, sở thích âm nhạc, danh sách phát, dữ liệu sinh lý thời gian thực và lịch sử trị liệu. Đảm bảo tính toàn vẹn, bảo mật và khả năng truy xuất hiệu quả.' },
+                            'comp-spotify': { title: 'Tích hợp Spotify API', description: 'Giao tiếp với Spotify để tìm kiếm bài hát, tạo và quản lý danh sách phát. Hệ thống sử dụng OAuth 2.0 để xác thực, cho phép các chuyên gia truy cập thư viện âm nhạc khổng lồ của Spotify để cá nhân hóa liệu pháp.' },
+                            'comp-medical': { title: 'Thiết bị Y tế', description: 'Nhận và xử lý dữ liệu từ các thiết bị y tế như Philips IntelliVue MX100 qua giao thức HL7 v2. Một module chuyên dụng sẽ lắng nghe, phân tích các thông điệp HL7, và chuyển đổi dữ liệu để lưu trữ và giám sát thời gian thực.' }
+                        }
+                    },
+                    roadmap: {
+                        mainTitle: "Lộ trình Phát triển MVP (12 Tuần)",
+                        description: "Dự án áp dụng phương pháp Agile với 6 sprint, mỗi sprint kéo dài 2 tuần, tập trung vào việc xây dựng các tính năng cốt lõi và liên tục nhận phản hồi để hoàn thiện sản phẩm.",
+                        chartTitle: "Phân bổ Công việc theo Sprint (ước tính)",
+                        sprintPrefix: "Sprint",
+                        weekPrefix: "Tuần",
+                        tasks: {
+                            web: "🚀 Ứng dụng Web (Cổng mCare)",
+                            mobile: "📱 Ứng dụng Di động (iPad)",
+                            backend: "⚙️ Backend & Tích hợp"
+                        },
+                        sprints: [
+                            { title: 'Nền tảng & Quản lý Người dùng', weeks: '1-2', tasks: { web: 'Thiết lập khung web, đăng nhập/đăng ký, quản lý tài khoản, tạo/xem hồ sơ bệnh nhân cơ bản.', mobile: 'Thiết lập khung ứng dụng iOS, màn hình khởi động.', backend: 'Thiết lập API và DB, API xác thực và quản lý người dùng, API bệnh nhân cơ bản.' } },
+                            { title: 'Luồng Nghiên cứu & Sở thích Âm nhạc', weeks: '3-4', tasks: { web: 'Hiển thị trạng thái luồng nghiên cứu, tích hợp Spotify API cơ bản (tìm kiếm, tạo playlist).', mobile: 'Video hướng dẫn, biểu mẫu đồng ý, ngẫu nhiên hóa, bảng câu hỏi sở thích, phát 10 đoạn nhạc và chấm điểm.', backend: 'Hoàn thiện API quản lý bệnh nhân, API Spotify, API sở thích âm nhạc.' } },
+                            { title: 'Phát nhạc & Tích hợp HL7 v2', weeks: '5-6', tasks: { web: 'Cải thiện giao diện quản lý playlist.', mobile: 'Phát danh sách phát Spotify được chỉ định, tích hợp HL7 v2 để nhận và hiển thị dữ liệu sinh lý.', backend: 'Phát triển module xử lý HL7 v2, API nhận và lưu trữ dữ liệu sinh lý liên tục.' } },
+                            { title: 'Giám sát Dữ liệu & Báo cáo cơ bản', weeks: '7-8', tasks: { web: 'Dashboard hiển thị dữ liệu sinh lý thời gian thực, xem dữ liệu lịch sử (biểu đồ), nhập kết quả xét nghiệm.', mobile: 'Tối ưu hóa hiển thị dữ liệu.', backend: 'API cho dữ liệu lịch sử và kết quả xét nghiệm.' } },
+                            { title: 'Quản lý Liệu pháp & Xuất dữ liệu', weeks: '9-10', tasks: { web: 'Giao diện tạo và gán playlist cá nhân hóa, quản lý chương trình trị liệu, chức năng xuất dữ liệu (CSV, Excel).', mobile: 'Hiển thị thông tin chương trình trị liệu.', backend: 'API quản lý playlist và chương trình trị liệu, logic xuất dữ liệu.' } },
+                            { title: 'Hoàn thiện & Tối ưu hóa', weeks: '11-12', tasks: { web: 'Kiểm thử toàn diện, tối ưu hóa hiệu suất, cải thiện UI/UX.', mobile: 'Kiểm thử trên thiết bị thật, tối ưu hóa pin và hiệu suất.', backend: 'Kiểm thử tải, tối ưu hóa truy vấn DB, hoàn thiện tài liệu.' } }
+                        ]
+                    },
+                    features: {
+                        mainTitle: "Luồng Nghiệp vụ & Tính năng chính",
+                        description: "Khám phá quy trình tương tác của bệnh nhân và chuyên gia, cùng với các tính năng thu thập và hiển thị dữ liệu được cá nhân hóa, tạo nên cốt lõi của liệu pháp HE.ART.",
+                        tabs: {
+                            patientFlow: {
+                                name: "Luồng Bệnh nhân",
+                                content: `
+                                    <p class="mb-6 text-slate-600">Quy trình này được thiết kế để đơn giản và thân thiện, hướng dẫn bệnh nhân qua từng bước của nghiên cứu một cách rõ ràng, từ lúc bắt đầu cho đến khi hoàn thành liệu pháp.</p>
+                                    <div class="relative pl-8 border-l-2 border-sky-200">
+                                        <div class="flow-step mb-8 p-4 bg-white rounded-lg shadow-sm border border-slate-200 relative">
+                                            <div class="absolute -left-[42px] top-1/2 -translate-y-1/2 w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center font-bold">1</div>
+                                            <h4 class="font-semibold text-sky-700">Xem Video Hướng dẫn</h4>
+                                            <p class="text-sm text-slate-600 mt-1">Bệnh nhân xem video giới thiệu về mục tiêu nghiên cứu, điền vào các mẫu đồng ý và quyền riêng tư, và xác nhận sự hiểu biết để tiếp tục.</p>
+                                        </div>
+                                        <div class="flow-step mb-8 p-4 bg-white rounded-lg shadow-sm border border-slate-200 relative">
+                                            <div class="absolute -left-[42px] top-1/2 -translate-y-1/2 w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center font-bold">2</div>
+                                            <h4 class="font-semibold text-sky-700">Thu thập Tiền sử Y tế (Anamnesis)</h4>
+                                            <p class="text-sm text-slate-600 mt-1">Đây là bước thứ hai trong luồng ứng dụng. Thông tin này ban đầu được nhập trên cổng thông tin web, nhưng có thể được thêm vào ứng dụng. Bao gồm hồ sơ y tế, hồ sơ sức khỏe và đơn thuốc.</p>
+                                        </div>
+                                        <div class="flow-step mb-8 p-4 bg-white rounded-lg shadow-sm border border-slate-200 relative">
+                                            <div class="absolute -left-[42px] top-1/2 -translate-y-1/2 w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center font-bold">3</div>
+                                            <h4 class="font-semibold text-sky-700">Điền Bảng câu hỏi STAI</h4>
+                                            <p class="text-sm text-slate-600 mt-1">Ứng dụng sẽ đưa ra bảng câu hỏi này trước khi thực hiện quy trình.</p>
+                                        </div>
+                                        <div class="flow-step mb-8 p-4 bg-white rounded-lg shadow-sm border border-slate-200 relative">
+                                            <div class="absolute -left-[42px] top-1/2 -translate-y-1/2 w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center font-bold">4</div>
+                                            <h4 class="font-semibold text-sky-700">Điền Bảng câu hỏi về Sở thích Âm nhạc</h4>
+                                            <p class="text-sm text-slate-600 mt-1">Bệnh nhân trả lời các câu hỏi để chọn thể loại âm nhạc ưa thích. Sau đó, bệnh nhân nghe 10 đoạn trích bài hát ngắn và cho điểm sở thích của mình. Kết quả này giúp tạo ra danh sách nhạc trị liệu cá nhân hóa.</p>
+                                        </div>
+                                        <div class="flow-step mb-8 p-4 bg-white rounded-lg shadow-sm border border-slate-200 relative">
+                                            <div class="absolute -left-[42px] top-1/2 -translate-y-1/2 w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center font-bold">5</div>
+                                            <h4 class="font-semibold text-sky-700">Ngẫu nhiên hóa</h4>
+                                            <p class="text-sm text-slate-600 mt-1">Bệnh nhân được ngẫu nhiên hóa vào một nhóm nghiên cứu.</p>
+                                        </div>
+                                        <div class="flow-step mb-8 p-4 bg-white rounded-lg shadow-sm border border-slate-200 relative">
+                                            <div class="absolute -left-[42px] top-1/2 -translate-y-1/2 w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center font-bold">6</div>
+                                            <h4 class="font-semibold text-sky-700">Nhà trị liệu Âm nhạc Chuẩn bị Danh sách nhạc</h4>
+                                            <p class="text-sm text-slate-600 mt-1">Nhà trị liệu âm nhạc thu thập dữ liệu và chuẩn bị một danh sách nhạc cụ thể, phù hợp với sở thích của bệnh nhân.</p>
+                                        </div>
+                                        <div class="flow-step mb-8 p-4 bg-white rounded-lg shadow-sm border border-slate-200 relative">
+                                            <div class="absolute -left-[42px] top-1/2 -translate-y-1/2 w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center font-bold">7</div>
+                                            <h4 class="font-semibold text-sky-700">Lấy Mẫu máu Cơ bản</h4>
+                                            <p class="text-sm text-slate-600 mt-1">Các mẫu máu (Cortisol, BNP và TnI siêu nhạy) và amylase alpha trong nước bọt được lấy.</p>
+                                        </div>
+                                        <div class="flow-step mb-8 p-4 bg-white rounded-lg shadow-sm border border-slate-200 relative">
+                                            <div class="absolute -left-[42px] top-1/2 -translate-y-1/2 w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center font-bold">8</div>
+                                            <h4 class="font-semibold text-sky-700">Nghe nhạc</h4>
+                                            <p class="text-sm text-slate-600 mt-1">Bệnh nhân nghe danh sách nhạc đã được xác định trước và tùy chỉnh trong 30 phút hoặc trong suốt thời gian can thiệp.</p>
+                                        </div>
+                                        <div class="flow-step mb-8 p-4 bg-white rounded-lg shadow-sm border border-slate-200 relative">
+                                            <div class="absolute -left-[42px] top-1/2 -translate-y-1/2 w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center font-bold">9</div>
+                                            <h4 class="font-semibold text-sky-700">Theo dõi liên tục</h4>
+                                            <p class="text-sm text-slate-600 mt-1">Nhịp tim, huyết áp, SpO2, và phân tích loạn nhịp tim được theo dõi liên tục trong suốt quá trình. Dữ liệu được gửi đến ứng dụng.</p>
+                                        </div>
+                                        <div class="flow-step mb-8 p-4 bg-white rounded-lg shadow-sm border border-slate-200 relative">
+                                            <div class="absolute -left-[42px] top-1/2 -translate-y-1/2 w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center font-bold">10</div>
+                                            <h4 class="font-semibold text-sky-700">Đánh giá sau quy trình (Bảng câu hỏi STAI)</h4>
+                                            <p class="text-sm text-slate-600 mt-1">Sau khi hoàn thành, ứng dụng sẽ đưa ra các câu hỏi sau quy trình.</p>
+                                        </div>
+                                        <div class="flow-step p-4 bg-white rounded-lg shadow-sm border border-slate-200 relative">
+                                            <div class="absolute -left-[42px] top-1/2 -translate-y-1/2 w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center font-bold">11</div>
+                                            <h4 class="font-semibold text-sky-700">Lấy Mẫu máu Cuối cùng</h4>
+                                            <p class="text-sm text-slate-600 mt-1">Các mẫu máu (Cortisol, BNP và TnI siêu nhạy) và amylase alpha trong nước bọt được lấy sau quy trình.</p>
+                                        </div>
+                                    </div>
+                                `
+                            },
+                            dataDashboard: {
+                                name: "Dashboard Dữ liệu",
+                                content: `
+                                    <p class="mb-8 text-slate-600">Cổng mCare cung cấp một bảng điều khiển mạnh mẽ để các chuyên gia và quản trị viên có thể theo dõi hiệu quả trị liệu và các chỉ số sức khỏe của bệnh nhân theo thời gian thực và lịch sử.</p>
+                                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                        <div class="bg-white p-4 rounded-lg shadow-md">
+                                            <h4 class="text-center font-semibold text-slate-700 mb-4">Phân bổ Bệnh nhân theo Nhóm</h4>
+                                            <div class="chart-container"><canvas id="patientGroupChart"></canvas></div>
+                                        </div>
+                                        <div class="bg-white p-4 rounded-lg shadow-md">
+                                            <h4 class="text-center font-semibold text-slate-700 mb-4">Kết quả Kiểm tra Sở thích Âm nhạc (Mẫu)</h4>
+                                            <div class="chart-container"><canvas id="musicPreferenceChart"></canvas></div>
+                                        </div>
+                                        <div class="bg-white p-4 rounded-lg shadow-md">
+                                            <h4 class="text-center font-semibold text-slate-700 mb-4">Giám sát Dữ liệu Sinh lý (Mẫu)</h4>
+                                            <div class="chart-container"><canvas id="vitalsChart"></canvas></div>
+                                        </div>
+                                        <div class="bg-white p-4 rounded-lg shadow-md">
+                                            <h4 class="text-center font-semibold text-slate-700 mb-4">Đánh giá Tâm lý STAI-S (Trước & Sau)</h4>
+                                            <div class="chart-container"><canvas id="psychChart"></canvas></div>
+                                        </div>
+                                    </div>
+                                `
+                            }
+                        },
+                        chartLabels: {
+                            patientGroup: ['Nhóm 1 (Đối chứng)', 'Nhóm 2 (Trước thủ thuật)', 'Nhóm 3 (Trong thủ thuật)'],
+                            musicPreference: ['Pop', 'Rock', 'Cổ điển', 'Jazz', 'Dân ca'],
+                            musicPreferenceLabel: 'Điểm trung bình (1-5)',
+                            vitals: ['-15 phút', '-10', '-5', 'Bắt đầu', '+5', '+10', '+15'],
+                            vitalsLabel1: 'Nhịp tim (bpm)',
+                            vitalsLabel2: 'Huyết áp (tâm thu)',
+                            psych: ['Lo lắng', 'Căng thẳng', 'Bồn chồn', 'Bất an', 'Sợ hãi'],
+                            psychLabel1: 'Trước trị liệu',
+                            psychLabel2: 'Sau trị liệu'
+                        }
+                    },
+                    risks: {
+                        mainTitle: "Các Lưu ý Quan trọng",
+                        description: "Để đảm bảo thành công cho dự án, cần đặc biệt chú trọng đến các vấn đề về bảo mật dữ liệu y tế, khả năng mở rộng của hệ thống, và sự phức tạp trong việc tích hợp các tiêu chuẩn y tế.",
+                        security: { title: "Bảo mật & Tuân thủ", description: "Cần tuân thủ nghiêm ngặt các quy định về bảo vệ dữ liệu y tế nhạy cảm (như GDPR, HIPAA, và luật pháp Việt Nam), mã hóa dữ liệu và kiểm soát truy cập chặt chẽ." },
+                        hl7: { title: "Tích hợp HL7 v2", description: "Đây là một phần phức tạp, đòi hỏi kiến thức chuyên sâu do sự khác biệt trong việc triển khai giữa các nhà cung cấp. Cần có chuyên gia hoặc đội ngũ kinh nghiệm." },
+                        uiux: { title: "Trải nghiệm Người dùng (UI/UX)", description: "Giao diện phải cực kỳ thân thiện, đơn giản và rõ ràng, đặc biệt là ứng dụng cho bệnh nhân, nhằm giảm thiểu lo lắng và dễ dàng sử dụng trong môi trường lâm sàng." },
+                        scalability: { title: "Khả năng Mở rộng", description: "Kiến trúc hệ thống cần được thiết kế để có thể dễ dàng mở rộng, đáp ứng được số lượng bệnh nhân và khối lượng dữ liệu ngày càng tăng trong tương lai." }
+                    },
+                    footer: "© 2025 Dự án HE.ART - Healing & Ear of Art. Trang tổng quan được tạo để minh họa."
+                }
+            };
+
+            let currentLang = 'en'; // Default language
+
+            const charts = {};
+
+            // Function Definitions (moved to top of DOMContentLoaded)
+            function updateContent(lang) {
+                const t = translations[lang];
+
+                // Update document title
+                document.title = t.appTitle;
+
+                // Update header
+                document.getElementById('header-main-title').textContent = t.header.mainTitle;
+                document.getElementById('header-sub-title').textContent = t.header.subTitle;
+                document.querySelector('a[data-nav-key="overview"]').textContent = t.header.nav.overview;
+                document.querySelector('a[data-nav-key="architecture"]').textContent = t.header.nav.architecture;
+                document.querySelector('a[data-nav-key="roadmap"]').textContent = t.header.nav.roadmap;
+                document.querySelector('a[data-nav-key="features"]').textContent = t.header.nav.features;
+                document.querySelector('a[data-nav-key="risks"]').textContent = t.header.nav.risks;
+                document.getElementById('language-toggle').textContent = lang === 'en' ? 'Tiếng Việt' : 'English';
+
+                // Update Overview section
+                document.querySelector('#overview h1').textContent = t.overview.mainTitle;
+                document.querySelector('#overview p.max-w-3xl').textContent = t.overview.description;
+                document.querySelector('#overview .section-title').textContent = t.overview.sectionTitle;
+                document.querySelector('#overview .grid > div:nth-child(1) h4').textContent = t.overview.objective1.title;
+                document.querySelector('#overview .grid > div:nth-child(1) p').textContent = t.overview.objective1.description;
+                document.querySelector('#overview .grid > div:nth-child(2) h4').textContent = t.overview.objective2.title;
+                document.querySelector('#overview .grid > div:nth-child(2) p').textContent = t.overview.objective2.description;
+                document.querySelector('#overview .grid > div:nth-child(3) h4').textContent = t.overview.objective3.title;
+                document.querySelector('#overview .grid > div:nth-child(3) p').textContent = t.overview.objective3.description;
+
+                // Update Architecture section
+                document.querySelector('#architecture h2').textContent = t.architecture.mainTitle;
+                document.querySelector('#architecture p.max-w-3xl').textContent = t.architecture.description;
+                document.getElementById('architecture-details').querySelector('p').textContent = t.architecture.hoverInstruction;
+                
+                document.getElementById('comp-spotify').querySelector('h4').textContent = t.architecture.components['comp-spotify'].title;
+                document.getElementById('comp-spotify').querySelector('p').textContent = t.architecture.components['comp-spotify'].description.split('. ')[0];
+                document.getElementById('comp-medical').querySelector('h4').textContent = t.architecture.components['comp-medical'].title;
+                document.getElementById('comp-medical').querySelector('p').textContent = t.architecture.components['comp-medical'].description.split('. ')[0];
+                document.getElementById('comp-backend').querySelector('h3').textContent = t.architecture.components['comp-backend'].title;
+                document.getElementById('comp-backend').querySelector('p').textContent = t.architecture.components['comp-backend'].description.split('. ')[0];
+                document.getElementById('comp-web').querySelector('h4').textContent = t.architecture.components['comp-web'].title;
+                document.getElementById('comp-web').querySelector('p').textContent = t.architecture.components['comp-web'].description.split('. ')[0];
+                document.getElementById('comp-mobile').querySelector('h4').textContent = t.architecture.components['comp-mobile'].title;
+                document.getElementById('comp-mobile').querySelector('p').textContent = t.architecture.components['comp-mobile'].description.split('. ')[0];
+                document.getElementById('comp-db').querySelector('h4').textContent = t.architecture.components['comp-db'].title;
+                document.getElementById('comp-db').querySelector('p').textContent = t.architecture.components['comp-db'].description.split('. ')[0];
+
+
+                // Update Roadmap section
+                document.querySelector('#roadmap h2').textContent = t.roadmap.mainTitle;
+                document.querySelector('#roadmap p.max-w-3xl').textContent = t.roadmap.description;
+                document.querySelector('#roadmap h3').textContent = t.roadmap.chartTitle;
+
+                const sprintListEl = document.getElementById('sprint-list');
+                sprintListEl.innerHTML = ''; 
+                t.roadmap.sprints.forEach((sprint, index) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <button data-sprint="${index + 1}" class="sprint-item w-full text-left p-4 rounded-lg border border-slate-200">
+                            <div class="flex justify-between items-center">
+                                <span class="font-semibold text-slate-700">${t.roadmap.sprintPrefix} ${index + 1}: ${sprint.title}</span>
+                                <span class="text-sm text-slate-500">${t.roadmap.weekPrefix} ${sprint.weeks}</span>
+                            </div>
+                        </button>
+                    `;
+                    sprintListEl.appendChild(li);
+                });
+
+                const activeSprintButton = document.querySelector('.sprint-item.active');
+                const activeSprintId = activeSprintButton ? activeSprintButton.dataset.sprint : 1;
+                showSprintDetails(activeSprintId);
+
+                if (charts.roadmap) {
+                    charts.roadmap.data.labels = t.roadmap.sprints.map((s, i) => `${t.roadmap.sprintPrefix} ${i + 1}`);
+                    charts.roadmap.data.datasets[0].label = t.roadmap.tasks.web.split(' ')[1];
+                    charts.roadmap.data.datasets[1].label = t.roadmap.tasks.mobile.split(' ')[1];
+                    charts.roadmap.data.datasets[2].label = t.roadmap.tasks.backend.split(' ')[1];
+                    charts.roadmap.update();
+                }
+
+                // Update Features section
+                document.querySelector('#features h2').textContent = t.features.mainTitle;
+                document.querySelector('#features p.max-w-3xl').textContent = t.features.description;
+                
+                const tabsContainer = document.getElementById('feature-tabs');
+                tabsContainer.innerHTML = '';
+                Object.keys(t.features.tabs).forEach((key, index) => {
+                    const feature = t.features.tabs[key];
+                    const tabButton = document.createElement('button');
+                    tabButton.dataset.target = key;
+                    tabButton.className = 'feature-tab-button whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm';
+                    tabButton.textContent = feature.name;
+                    if(index === 0) {
+                        tabButton.classList.add('border-sky-500', 'text-sky-600');
+                        tabButton.classList.remove('border-transparent', 'text-slate-500', 'hover:text-slate-700', 'hover:border-slate-300');
+                    } else {
+                        tabButton.classList.add('border-transparent', 'text-slate-500', 'hover:text-slate-700', 'hover:border-slate-300');
+                    }
+                    tabsContainer.appendChild(tabButton);
+                });
+
+                const activeTabButton = document.querySelector('.feature-tab-button.border-sky-500');
+                const activeTabKey = activeTabButton ? activeTabButton.dataset.target : Object.keys(t.features.tabs)[0];
+                switchTab(activeTabKey);
+
+                // Update Risks section
+                document.querySelector('#risks h2').textContent = t.risks.mainTitle;
+                document.querySelector('#risks p.max-w-3xl').textContent = t.risks.description;
+                document.querySelector('#risks .grid > div:nth-child(1) h3').textContent = t.risks.security.title;
+                document.querySelector('#risks .grid > div:nth-child(1) p').textContent = t.risks.security.description;
+                document.querySelector('#risks .grid > div:nth-child(2) h3').textContent = t.risks.hl7.title;
+                document.querySelector('#risks .grid > div:nth-child(2) p').textContent = t.risks.hl7.description;
+                document.querySelector('#risks .grid > div:nth-child(3) h3').textContent = t.risks.uiux.title;
+                document.querySelector('#risks .grid > div:nth-child(3) p').textContent = t.risks.uiux.description;
+                document.querySelector('#risks .grid > div:nth-child(4) h3').textContent = t.risks.scalability.title;
+                document.querySelector('#risks .grid > div:nth-child(4) p').textContent = t.risks.scalability.description;
+
+                // Update Footer
+                document.querySelector('footer p').textContent = t.footer;
+            }
+
+            function showSprintDetails(sprintId) {
+                const t = translations[currentLang];
+                const sprintData = t.roadmap.sprints[sprintId - 1]; // Sprints are 1-indexed in UI, 0-indexed in array
+                if (!sprintData) return;
+
+                const sprintDetailsEl = document.getElementById('sprint-details');
+                sprintDetailsEl.innerHTML = `
+                    <h3 class="text-xl font-bold text-sky-700">${t.roadmap.sprintPrefix} ${sprintId}: ${sprintData.title}</h3>
+                    <p class="text-sm text-slate-500 mb-6">${t.roadmap.weekPrefix} ${sprintData.weeks}</p>
+                    <div class="space-y-4">
+                        <div>
+                            <h4 class="font-semibold text-slate-800">${t.roadmap.tasks.web}</h4>
+                            <p class="mt-1 text-slate-600 text-sm pl-4 border-l-2 border-slate-200">${sprintData.tasks.web}</p>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-slate-800">${t.roadmap.tasks.mobile}</h4>
+                            <p class="mt-1 text-slate-600 text-sm pl-4 border-l-2 border-slate-200">${sprintData.tasks.mobile}</p>
+                        </div>
+                         <div>
+                            <h4 class="font-semibold text-slate-800">${t.roadmap.tasks.backend}</h4>
+                            <p class="mt-1 text-slate-600 text-sm pl-4 border-l-2 border-slate-200">${sprintData.tasks.backend}</p>
+                        </div>
+                    </div>
+                `;
+                
+                document.querySelectorAll('.sprint-item').forEach(item => item.classList.remove('active', 'bg-sky-50', 'border-sky-300'));
+                const activeItem = document.querySelector(`.sprint-item[data-sprint='${sprintId}']`);
+                if(activeItem) {
+                     activeItem.classList.add('active', 'bg-sky-50', 'border-sky-300');
+                }
+            }
+
+            function switchTab(targetKey) {
+                const t = translations[currentLang];
+                const contentContainer = document.getElementById('feature-content');
+
+                destroyCharts();
+                contentContainer.innerHTML = t.features.tabs[targetKey].content;
+                
+                if (targetKey === 'dataDashboard') {
+                     setTimeout(() => {
+                        createPatientGroupChart();
+                        createMusicPreferenceChart();
+                        createVitalsChart();
+                        createPsychChart();
+                    }, 100);
+                }
+
+                document.querySelectorAll('.feature-tab-button').forEach(btn => {
+                    if (btn.dataset.target === targetKey) {
+                        btn.className = 'feature-tab-button whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm border-sky-500 text-sky-600';
+                    } else {
+                         btn.className = 'feature-tab-button whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300';
+                    }
+                });
+            }
+
+            function createPatientGroupChart() {
+                const t = translations[currentLang];
+                const ctx = document.getElementById('patientGroupChart').getContext('2d');
+                charts.patientGroup = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: t.features.chartLabels.patientGroup,
+                        datasets: [{
+                            label: t.features.chartLabels.patientGroupLabel,
+                            data: [33.3, 33.3, 33.3],
+                            backgroundColor: ['#7dd3fc', '#38bdf8', '#0ea5e9'],
+                            borderColor: '#ffffff',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom' },
+                            tooltip: { callbacks: { label: (context) => `${context.label}: ${context.raw.toFixed(1)}%` } }
+                        }
+                    }
+                });
+            }
+
+            function createMusicPreferenceChart() {
+                const t = translations[currentLang];
+                const ctx = document.getElementById('musicPreferenceChart').getContext('2d');
+                charts.musicPreference = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: t.features.chartLabels.musicPreference,
+                        datasets: [{
+                            label: t.features.chartLabels.musicPreferenceLabel,
+                            data: [4.2, 3.8, 4.5, 3.1, 4.0],
+                            backgroundColor: '#38bdf8',
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: { y: { beginAtZero: true, max: 5 } },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+
+            function createVitalsChart() {
+                const t = translations[currentLang];
+                const ctx = document.getElementById('vitalsChart').getContext('2d');
+                charts.vitals = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: t.features.chartLabels.vitals,
+                        datasets: [
+                            {
+                                label: t.features.chartLabels.vitalsLabel1,
+                                data: [85, 82, 88, 95, 92, 90, 88],
+                                borderColor: '#ef4444',
+                                tension: 0.3,
+                                fill: false
+                            },
+                            {
+                                label: t.features.chartLabels.vitalsLabel2,
+                                data: [130, 128, 135, 142, 138, 135, 132],
+                                borderColor: '#3b82f6',
+                                tension: 0.3,
+                                fill: false
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom' } }
+                    }
+                });
+            }
+
+            function createPsychChart() {
+                const t = translations[currentLang];
+                const ctx = document.getElementById('psychChart').getContext('2d');
+                charts.psych = new Chart(ctx, {
+                    type: 'radar',
+                    data: {
+                        labels: t.features.chartLabels.psych,
+                        datasets: [
+                            {
+                                label: t.features.chartLabels.psychLabel1,
+                                data: [8, 7, 9, 6, 7],
+                                backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                                borderColor: 'rgb(239, 68, 68)',
+                                pointBackgroundColor: 'rgb(239, 68, 68)',
+                                pointBorderColor: '#fff',
+                            },
+                            {
+                                label: t.features.chartLabels.psychLabel2,
+                                data: [4, 3, 4, 3, 2],
+                                backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                                borderColor: 'rgb(59, 130, 246)',
+                                pointBackgroundColor: 'rgb(59, 130, 246)',
+                                pointBorderColor: '#fff',
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: { r: { beginAtZero: true, max: 10 } },
+                        plugins: { legend: { position: 'bottom' } }
+                    }
+                });
+            }
+
+            function destroyCharts() {
+                Object.values(charts).forEach(chart => {
+                    if (chart && typeof chart.destroy === 'function') {
+                        chart.destroy();
+                    }
+                });
+            }
+
+            function setupArchitectureInteraction() {
+                const components = document.querySelectorAll('.architecture-component');
+                const detailsEl = document.getElementById('architecture-details');
+                components.forEach(comp => {
+                    comp.addEventListener('mouseenter', () => {
+                        const info = translations[currentLang].architecture.components[comp.id];
+                        detailsEl.innerHTML = `<h4 class="font-bold text-lg text-slate-800">${info.title}</h4><p class="mt-2 text-slate-600">${info.description}</p>`;
+                        components.forEach(c => c.classList.remove('highlight'));
+                        comp.classList.add('highlight');
+                    });
+                });
+            }
+            
+            function setupRoadmapInteraction() {
+                const sprintListEl = document.getElementById('sprint-list');
+                
+                // Initial population of sprint list is done in updateContent
+                sprintListEl.addEventListener('click', (e) => {
+                    const button = e.target.closest('button.sprint-item');
+                    if (button) {
+                        showSprintDetails(button.dataset.sprint);
+                    }
+                });
+            }
+            
+            function setupFeatureTabs() {
+                const tabsContainer = document.getElementById('feature-tabs');
+                // Initial population of tabs is done in updateContent
+                tabsContainer.addEventListener('click', e => {
+                    if (e.target.matches('.feature-tab-button')) {
+                        switchTab(e.target.dataset.target);
+                    }
+                });
+            }
+            
+            function setupNavHighlight() {
+                const sections = document.querySelectorAll('section[id]');
+                const navLinks = document.querySelectorAll('.nav-link');
+                
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            navLinks.forEach(link => {
+                                link.classList.remove('active');
+                                if(link.getAttribute('href').substring(1) === entry.target.id) {
+                                    link.classList.add('active');
+                                }
+                            });
+                        }
+                    });
+                }, { rootMargin: "-50% 0px -50% 0px" });
+
+                sections.forEach(section => {
+                    observer.observe(section);
+                });
+            }
+
+            document.getElementById('language-toggle').addEventListener('click', () => {
+                currentLang = currentLang === 'en' ? 'vi' : 'en';
+                updateContent(currentLang);
+            });
+            
+            // Initial setup and content load (calls moved to after function definitions)
+            setupArchitectureInteraction();
+            setupRoadmapInteraction();
+            createRoadmapChart(); 
+            setupFeatureTabs();
+            setupNavHighlight();
+            updateContent(currentLang); 
+        });
+    </script>
+</body>
+</html>
